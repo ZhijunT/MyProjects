@@ -1,0 +1,33 @@
+{
+  "name": "space-portfolio",
+  "version": "1.0.0",
+  "description": "A personal space-themed webpage featuring a 3D solar system.",
+  "main": "index.js",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@react-three/drei": "^10.0.8",
+    "@react-three/fiber": "^9.1.2",
+    "next": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "three": "^0.176.0",
+    "three-stdlib": "^2.36.0"
+  },
+  "devDependencies": {
+    "@types/node": "latest",
+    "@types/react": "latest",
+    "typescript": "latest"
+  },
+  "keywords": [
+    "space",
+    "solar system",
+    "3D",
+    "Next.js"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
+}
