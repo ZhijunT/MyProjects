@@ -18,6 +18,8 @@ const MIN_SPEED = 0;
 const MAX_SPEED = 5;
 const SPEED_STEP = 0.25;
 const INITIAL_SPEED = 1;
+const SUN_SPEEDUP_STEP = 0.005;
+const SUN_SPEEDUP_STEP_2 = SUN_SPEEDUP_STEP * 2;
 
 const Home: React.FC = () => {
   const [planetStates, setPlanetStates] = useState(
@@ -27,17 +29,22 @@ const Home: React.FC = () => {
     }))
   );
   const [speed, setSpeed] = useState(INITIAL_SPEED);
+  const [sunActive, setSunActive] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const audioRef2 = useRef<HTMLAudioElement>(null);
+  const [sunPhase, setSunPhase] = useState<1 | 2>(1);
 
   // Sync video playback rate with speed
   useEffect(() => {
     if (videoRef.current) {
-      // Prevent video from freezing at 0
-      videoRef.current.playbackRate = speed > 0 ? speed : 0.05;
+      // Clamp playbackRate between 0.0625 and 16
+      const clamped = Math.max(0.0625, Math.min(speed, 16));
+      videoRef.current.playbackRate = clamped;
     }
   }, [speed]);
 
-  // Animation loop
+  // Animation loop for planets
   useEffect(() => {
     let animationId: number;
     let lastTime = performance.now();
@@ -62,10 +69,53 @@ const Home: React.FC = () => {
     return () => cancelAnimationFrame(animationId);
   }, [speed]);
 
-  // Button handlers
-  const handleSlower = () => setSpeed((s) => Math.max(MIN_SPEED, +(s - SPEED_STEP).toFixed(2)));
-  const handlePause = () => setSpeed(0);
-  const handleFaster = () => setSpeed((s) => Math.min(MAX_SPEED, +(s + SPEED_STEP).toFixed(2)));
+  // Sun speedup effect
+  useEffect(() => {
+    if (!sunActive) return;
+    let raf: number;
+    const speedup = () => {
+      setSpeed((prev) => prev + (sunPhase === 1 ? SUN_SPEEDUP_STEP : SUN_SPEEDUP_STEP_2));
+      raf = requestAnimationFrame(speedup);
+    };
+    raf = requestAnimationFrame(speedup);
+    return () => cancelAnimationFrame(raf);
+  }, [sunActive, sunPhase]);
+
+  // Listen for sound1 ending, then play sound2 and double speedup
+  useEffect(() => {
+    if (!sunActive) return;
+    const handleEnded = () => {
+      setSunPhase(2);
+      if (audioRef2.current) {
+        audioRef2.current.currentTime = 0;
+        audioRef2.current.play();
+      }
+    };
+    const audio = audioRef.current;
+    if (audio) {
+      audio.addEventListener("ended", handleEnded);
+    }
+    return () => {
+      if (audio) audio.removeEventListener("ended", handleEnded);
+    };
+  }, [sunActive]);
+
+  // Sun click handler
+  const handleSunClick = () => {
+    if (!sunActive) {
+      setSunActive(true);
+      setSunPhase(1);
+      if (audioRef.current) {
+        audioRef.current.currentTime = 0;
+        audioRef.current.play();
+      }
+    }
+  };
+
+  // Button handlers (disable while sunActive)
+  const handleSlower = () => !sunActive && setSpeed((s) => Math.max(MIN_SPEED, +(s - SPEED_STEP).toFixed(2)));
+  const handlePause = () => !sunActive && setSpeed(0);
+  const handleFaster = () => !sunActive && setSpeed((s) => Math.min(MAX_SPEED, +(s + SPEED_STEP).toFixed(2)));
 
   return (
     <div
@@ -97,6 +147,9 @@ const Home: React.FC = () => {
           pointerEvents: "none",
         }}
       />
+      {/* Audio for sun event */}
+      <audio ref={audioRef} src="/videos/sound1.mp3" />
+      <audio ref={audioRef2} src="/videos/sound2.mp3" />
       {/* Overlay to darken video for readability */}
       <div
         style={{
@@ -106,7 +159,6 @@ const Home: React.FC = () => {
           width: "100vw",
           height: "100vh",
           background: "radial-gradient(ellipse at center, rgba(10,10,20,0.35) 100%, rgba(20,20,30,0.35) 100%)",
-          //background: "transparent",
           zIndex: 1,
           pointerEvents: "none",
         }}
@@ -135,7 +187,7 @@ const Home: React.FC = () => {
           </span>
           <button
             onClick={handleSlower}
-            disabled={speed <= MIN_SPEED}
+            disabled={speed <= MIN_SPEED || sunActive}
             style={{
               background: "#222",
               color: "#fff",
@@ -143,14 +195,15 @@ const Home: React.FC = () => {
               borderRadius: 6,
               padding: "6px 12px",
               fontSize: 16,
-              cursor: speed > MIN_SPEED ? "pointer" : "not-allowed",
-              opacity: speed > MIN_SPEED ? 1 : 0.5,
+              cursor: speed > MIN_SPEED && !sunActive ? "pointer" : "not-allowed",
+              opacity: speed > MIN_SPEED && !sunActive ? 1 : 0.5,
             }}
           >
             Slower
           </button>
           <button
             onClick={handlePause}
+            disabled={sunActive}
             style={{
               background: "#444",
               color: "#fff",
@@ -158,14 +211,15 @@ const Home: React.FC = () => {
               borderRadius: 6,
               padding: "6px 12px",
               fontSize: 16,
-              cursor: "pointer",
+              cursor: !sunActive ? "pointer" : "not-allowed",
+              opacity: !sunActive ? 1 : 0.5,
             }}
           >
             Pause
           </button>
           <button
             onClick={handleFaster}
-            disabled={speed >= MAX_SPEED}
+            disabled={speed >= MAX_SPEED || sunActive}
             style={{
               background: "#222",
               color: "#fff",
@@ -173,8 +227,8 @@ const Home: React.FC = () => {
               borderRadius: 6,
               padding: "6px 12px",
               fontSize: 16,
-              cursor: speed < MAX_SPEED ? "pointer" : "not-allowed",
-              opacity: speed < MAX_SPEED ? 1 : 0.5,
+              cursor: speed < MAX_SPEED && !sunActive ? "pointer" : "not-allowed",
+              opacity: speed < MAX_SPEED && !sunActive ? 1 : 0.5,
             }}
           >
             Faster
@@ -189,14 +243,15 @@ const Home: React.FC = () => {
             top: `calc(50% - 1000px)`,
           }}
         >
-          {/* Sun */}
+          {/* Sun as a button */}
           <image
             href="/planets/sun.png"
             x={1000 - 60}
             y={1000 - 60}
             width={120}
             height={120}
-            style={{ pointerEvents: "none" }}
+            style={{ cursor: "pointer", pointerEvents: "auto" }}
+            onClick={handleSunClick}
           />
           {/* Orbits */}
           {planets.map((p, i) => (
