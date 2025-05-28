@@ -1,13 +1,6 @@
-# dependencies
 node_modules/
-
-# build output
 .next/
-
-# local env files
 .env
 .env.local
 .env.*.local
-
-# system files
 .DS_Store
