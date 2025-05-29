@@ -24,6 +24,8 @@ const PULL_START = 13; // seconds after sun click to start pulling
 const PULL_DURATION = 35; // seconds for the pull-in effect
 const BG_VIDEOS = ["/videos/space.mp4", "/videos/space1.mp4", "/videos/space2.mp4"];
 
+const MENU_WIDTH = 320; // <--- Change this value to set the menu width (px)
+
 const Home: React.FC = () => {
   const [planetStates, setPlanetStates] = useState(
     planets.map((_, i) => ({
@@ -44,6 +46,7 @@ const Home: React.FC = () => {
   const audioRef2 = useRef<HTMLAudioElement>(null);
   const [sunPhase, setSunPhase] = useState<1 | 2>(1);
   const sunStartRef = useRef<number | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   // Sync video playback rate with speed
   useEffect(() => {
@@ -274,6 +277,108 @@ const Home: React.FC = () => {
         >
           Change Background
         </button>
+      </div>
+      {/* Top-left menu toggle button */}
+      <button
+        onClick={() => setMenuOpen((v) => !v)}
+        style={{
+          position: "fixed",
+          top: 32,
+          left: 32,
+          zIndex: 30,
+          background: "rgba(255,255,255,0.05)",
+          color: "#fff",
+          border: "2px solid #fff",
+          borderRadius: 8,
+          padding: "10px 18px",
+          fontSize: 16,
+          fontFamily: "Orbitron, sans-serif",
+          cursor: "pointer",
+          boxShadow: "0 2px 8px #0004",
+          transition: "background 0.2s, border-color 0.2s",
+        }}
+      >
+        {menuOpen ? "Close Menu" : "Open Menu"}
+      </button>
+
+      {/* Sliding menu */}
+      <div
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          height: "100vh",
+          width: MENU_WIDTH,
+          maxWidth: "90vw",
+          background: "rgba(20,20,30,0.95)",
+          boxShadow: "2px 0 16px #0008",
+          zIndex: 25,
+          transform: menuOpen ? "translateX(0)" : `translateX(-${MENU_WIDTH}px)`,
+          transition: "transform 0.35s cubic-bezier(.77,0,.18,1)",
+          display: "flex",
+          flexDirection: "column",
+          gap: 18,
+          padding: "48px 24px 24px 24px",
+        }}
+      >
+        <h2
+          style={{
+            color: "#fff",
+            fontFamily: "Orbitron, sans-serif",
+            fontWeight: 700,
+            fontSize: 24,
+            margin: "0 0 18px 0",
+            letterSpacing: 2,
+            textShadow: "0 0 8px #000",
+          }}
+        >
+          Planets
+        </h2>
+        {planets.map((planet) => (
+          <a
+            key={planet.name}
+            href={planet.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ textDecoration: "none", width: "100%" }}
+          >
+            <button
+              style={{
+                width: "100%",
+                background: "rgba(255,255,255,0.05)",
+                color: "#fff",
+                border: "2px solid #fff",
+                borderRadius: 8,
+                padding: "10px 18px",
+                fontSize: 16,
+                fontFamily: "Orbitron, sans-serif",
+                cursor: "pointer",
+                boxShadow: "0 2px 8px #0004",
+                marginBottom: 8,
+                textAlign: "left",
+                transition: "background 0.2s, border-color 0.2s",
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+              }}
+            >
+              {planet.img && (
+                <img
+                  src={planet.img}
+                  alt={planet.name}
+                  style={{
+                    width: 28,
+                    height: 28,
+                    borderRadius: "50%",
+                    objectFit: "cover",
+                    background: "#222",
+                  }}
+                />
+              )}
+              <span>{planet.name}</span>
+            </button>
+          </a>
+        ))}
       </div>
       {/* Main content */}
       <div style={{ position: "relative", zIndex: 2, width: "100vw", height: "100vh" }}>
