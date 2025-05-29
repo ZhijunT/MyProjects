@@ -22,6 +22,7 @@ const SUN_SPEEDUP_STEP = 0.005;
 const SUN_SPEEDUP_STEP_2 = SUN_SPEEDUP_STEP * 2;
 const PULL_START = 13; // seconds after sun click to start pulling
 const PULL_DURATION = 35; // seconds for the pull-in effect
+const BG_VIDEOS = ["/videos/space.mp4", "/videos/space1.mp4", "/videos/space2.mp4"];
 
 const Home: React.FC = () => {
   const [planetStates, setPlanetStates] = useState(
@@ -34,6 +35,10 @@ const Home: React.FC = () => {
   const [sunActive, setSunActive] = useState(false);
   const [sunTimer, setSunTimer] = useState<number>(0);
   const [pulling, setPulling] = useState(false);
+  const [showNames, setShowNames] = useState(true);
+  const [showOrbits, setShowOrbits] = useState(true);
+  const [bgVideoIndex, setBgVideoIndex] = useState(1); // default to space1.mp4
+  const [bgVideo, setBgVideo] = useState(BG_VIDEOS[bgVideoIndex]);
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const audioRef2 = useRef<HTMLAudioElement>(null);
@@ -150,6 +155,16 @@ const Home: React.FC = () => {
   const handlePause = () => !sunActive && setSpeed(0);
   const handleFaster = () => !sunActive && setSpeed((s) => Math.min(MAX_SPEED, +(s + SPEED_STEP).toFixed(2)));
 
+  // Update bgVideo when bgVideoIndex changes
+  useEffect(() => {
+    setBgVideo(BG_VIDEOS[bgVideoIndex]);
+  }, [bgVideoIndex]);
+
+  // For switching background video on sunPhase change (keep this logic)
+  useEffect(() => {
+    if (sunPhase === 2) setBgVideo("/videos/space2.mp4");
+  }, [sunPhase]);
+
   return (
     <div
       style={{
@@ -168,7 +183,7 @@ const Home: React.FC = () => {
         loop
         muted
         playsInline
-        src="/videos/space1.mp4"
+        src={bgVideo}
         style={{
           position: "fixed",
           top: 0,
@@ -196,6 +211,70 @@ const Home: React.FC = () => {
           pointerEvents: "none",
         }}
       />
+      {/* Customization Buttons (bottom right) */}
+      <div
+        style={{
+          position: "fixed",
+          bottom: 32,
+          right: 32,
+          zIndex: 20,
+          display: "flex",
+          flexDirection: "column",
+          gap: 12,
+        }}
+      >
+        <button
+          onClick={() => setShowNames((v) => !v)}
+          style={{
+            background: "rgba(255,255,255,0.05)",
+            color: "#fff",
+            border: "2px solid #fff",
+            borderRadius: 8,
+            padding: "10px 18px",
+            fontSize: 16,
+            fontFamily: "Orbitron, sans-serif",
+            cursor: "pointer",
+            boxShadow: "0 2px 8px #0004",
+            transition: "background 0.2s, border-color 0.2s",
+          }}
+        >
+          {showNames ? "Hide Names" : "Show Names"}
+        </button>
+        <button
+          onClick={() => setShowOrbits((v) => !v)}
+          style={{
+            background: "rgba(255,255,255,0.05)",
+            color: "#fff",
+            border: "2px solid #fff",
+            borderRadius: 8,
+            padding: "10px 18px",
+            fontSize: 16,
+            fontFamily: "Orbitron, sans-serif",
+            cursor: "pointer",
+            boxShadow: "0 2px 8px #0004",
+            transition: "background 0.2s, border-color 0.2s",
+          }}
+        >
+          {showOrbits ? "Hide Orbits" : "Show Orbits"}
+        </button>
+        <button
+          onClick={() => setBgVideoIndex((i) => (i + 1) % BG_VIDEOS.length)}
+          style={{
+            background: "rgba(255,255,255,0.05)",
+            color: "#fff",
+            border: "2px solid #fff",
+            borderRadius: 8,
+            padding: "10px 18px",
+            fontSize: 16,
+            fontFamily: "Orbitron, sans-serif",
+            cursor: "pointer",
+            boxShadow: "0 2px 8px #0004",
+            transition: "background 0.2s, border-color 0.2s",
+          }}
+        >
+          Change Background
+        </button>
+      </div>
       {/* Main content */}
       <div style={{ position: "relative", zIndex: 2, width: "100vw", height: "100vh" }}>
         {/* Timer display (optional) */}
@@ -297,9 +376,9 @@ const Home: React.FC = () => {
             top: `calc(50% - 1000px)`,
           }}
         >
-          {/* Sun as a button */}
+          {/* Sun or Blackhole as a button */}
           <image
-            href="/planets/sun.png"
+            href={sunPhase === 2 ? "/planets/blackhole1.png" : "/planets/sun.png"}
             x={1000 - 60}
             y={1000 - 60}
             width={120}
@@ -308,17 +387,18 @@ const Home: React.FC = () => {
             onClick={handleSunClick}
           />
           {/* Orbits */}
-          {planets.map((p, i) => (
-            <circle
-              key={p.name + "-orbit"}
-              cx={1000}
-              cy={1000}
-              r={p.r}
-              fill="none"
-              stroke="#444"
-              strokeDasharray="4 4"
-            />
-          ))}
+          {showOrbits &&
+            planets.map((p, i) => (
+              <circle
+                key={p.name + "-orbit"}
+                cx={1000}
+                cy={1000}
+                r={p.r}
+                fill="none"
+                stroke="#444"
+                strokeDasharray="4 4"
+              />
+            ))}
           {/* Contrails */}
           {planetStates.map((state, i) => (
             <polyline
@@ -333,7 +413,6 @@ const Home: React.FC = () => {
           {/* Planets */}
           {planetStates.map((state, i) => {
             const planet = planets[i];
-            // Calculate radius for current frame
             let r = planet.r;
             if (pulling && sunTimer >= PULL_START) {
               const pullElapsed = Math.min(sunTimer - PULL_START, PULL_DURATION);
@@ -371,20 +450,22 @@ const Home: React.FC = () => {
                     style={{ cursor: "pointer" }}
                   />
                 )}
-                <text
-                  x={x}
-                  y={y - planet.size - 8}
-                  fill="#fff"
-                  fontSize="14"
-                  textAnchor="middle"
-                  style={{
-                    textShadow: "0 0 4px #000, 0 0 8px #000",
-                    pointerEvents: "none",
-                    fontFamily: "sans-serif",
-                  }}
-                >
-                  {planet.name}
-                </text>
+                {showNames && (
+                  <text
+                    x={x}
+                    y={y - planet.size - 8}
+                    fill="#fff"
+                    fontSize="14"
+                    textAnchor="middle"
+                    style={{
+                      textShadow: "0 0 4px #000, 0 0 8px #000",
+                      pointerEvents: "none",
+                      fontFamily: "sans-serif",
+                    }}
+                  >
+                    {planet.name}
+                  </text>
+                )}
               </a>
             );
           })}
