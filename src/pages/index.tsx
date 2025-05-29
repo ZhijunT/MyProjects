@@ -20,6 +20,8 @@ const SPEED_STEP = 0.25;
 const INITIAL_SPEED = 1;
 const SUN_SPEEDUP_STEP = 0.005;
 const SUN_SPEEDUP_STEP_2 = SUN_SPEEDUP_STEP * 2;
+const PULL_START = 13; // seconds after sun click to start pulling
+const PULL_DURATION = 35; // seconds for the pull-in effect
 
 const Home: React.FC = () => {
   const [planetStates, setPlanetStates] = useState(
@@ -30,10 +32,13 @@ const Home: React.FC = () => {
   );
   const [speed, setSpeed] = useState(INITIAL_SPEED);
   const [sunActive, setSunActive] = useState(false);
+  const [sunTimer, setSunTimer] = useState<number>(0);
+  const [pulling, setPulling] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const audioRef2 = useRef<HTMLAudioElement>(null);
   const [sunPhase, setSunPhase] = useState<1 | 2>(1);
+  const sunStartRef = useRef<number | null>(null);
 
   // Sync video playback rate with speed
   useEffect(() => {
@@ -44,7 +49,27 @@ const Home: React.FC = () => {
     }
   }, [speed]);
 
-  // Animation loop for planets
+  // Start timer when sun is clicked
+  useEffect(() => {
+    if (!sunActive) {
+      setSunTimer(0);
+      setPulling(false);
+      sunStartRef.current = null;
+      return;
+    }
+    let raf: number;
+    const tick = () => {
+      if (sunStartRef.current === null) sunStartRef.current = performance.now();
+      const elapsed = (performance.now() - sunStartRef.current) / 1000;
+      setSunTimer(elapsed);
+      if (elapsed >= PULL_START && !pulling) setPulling(true);
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [sunActive, pulling]);
+
+  // Animation loop for planets with pull-in effect
   useEffect(() => {
     let animationId: number;
     let lastTime = performance.now();
@@ -55,9 +80,17 @@ const Home: React.FC = () => {
       setPlanetStates((prev) =>
         prev.map((state, i) => {
           const planet = planets[i];
+          let r = planet.r;
+          // If pulling, reduce radius over PULL_DURATION seconds
+          if (pulling && sunTimer >= PULL_START) {
+            const pullElapsed = Math.min(sunTimer - PULL_START, PULL_DURATION);
+            const pullProgress = Math.min(pullElapsed / PULL_DURATION, 1);
+            // Ease in for smooth effect (quadratic)
+            r = planet.r * (1 - pullProgress * pullProgress);
+          }
           const angle = state.angle + planet.speed * delta * 0.5 * speed;
-          const x = 1000 + planet.r * Math.cos(angle);
-          const y = 1000 + planet.r * Math.sin(angle);
+          const x = 1000 + r * Math.cos(angle);
+          const y = 1000 + r * Math.sin(angle);
           const newTrail = [...state.trail, { x, y }];
           if (newTrail.length > TRAIL_LENGTH) newTrail.shift();
           return { angle, trail: newTrail };
@@ -67,7 +100,7 @@ const Home: React.FC = () => {
     };
     animationId = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(animationId);
-  }, [speed]);
+  }, [speed, pulling, sunTimer]);
 
   // Sun speedup effect
   useEffect(() => {
@@ -165,6 +198,27 @@ const Home: React.FC = () => {
       />
       {/* Main content */}
       <div style={{ position: "relative", zIndex: 2, width: "100vw", height: "100vh" }}>
+        {/* Timer display (optional) */}
+        {sunActive && (
+          <div
+            style={{
+              position: "absolute",
+              top: 32,
+              left: 32,
+              zIndex: 10,
+              background: "rgba(20,20,30,0.85)",
+              borderRadius: 12,
+              padding: "8px 16px",
+              color: "#fff",
+              fontFamily: "Orbitron, sans-serif",
+              fontSize: 18,
+              letterSpacing: 1,
+              boxShadow: "0 2px 12px #0008",
+            }}
+          >
+            {Math.floor(sunTimer)}s
+          </div>
+        )}
         {/* Speed Controls */}
         <div
           style={{
@@ -279,8 +333,15 @@ const Home: React.FC = () => {
           {/* Planets */}
           {planetStates.map((state, i) => {
             const planet = planets[i];
-            const x = 1000 + planet.r * Math.cos(state.angle);
-            const y = 1000 + planet.r * Math.sin(state.angle);
+            // Calculate radius for current frame
+            let r = planet.r;
+            if (pulling && sunTimer >= PULL_START) {
+              const pullElapsed = Math.min(sunTimer - PULL_START, PULL_DURATION);
+              const pullProgress = Math.min(pullElapsed / PULL_DURATION, 1);
+              r = planet.r * (1 - pullProgress * pullProgress);
+            }
+            const x = 1000 + r * Math.cos(state.angle);
+            const y = 1000 + r * Math.sin(state.angle);
             return (
               <a
                 key={planet.name}
@@ -289,7 +350,6 @@ const Home: React.FC = () => {
                 rel="noopener noreferrer"
                 style={{ textDecoration: "none" }}
               >
-                {/* Only show circle if no image */}
                 {!planet.img && (
                   <circle
                     cx={x}
@@ -301,7 +361,6 @@ const Home: React.FC = () => {
                     style={{ cursor: "pointer" }}
                   />
                 )}
-                {/* Show image if present */}
                 {planet.img && (
                   <image
                     href={planet.img}
