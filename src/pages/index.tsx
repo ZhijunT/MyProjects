@@ -18,7 +18,7 @@ const MIN_SPEED = 0;
 const MAX_SPEED = 5;
 const SPEED_STEP = 0.25;
 const INITIAL_SPEED = 1;
-const SUN_SPEEDUP_STEP = 0.005;
+const SUN_SPEEDUP_STEP = 0.007;
 const SUN_SPEEDUP_STEP_2 = SUN_SPEEDUP_STEP * 2;
 const PULL_START = 13; // seconds after sun click to start pulling
 const PULL_DURATION = 35; // seconds for the pull-in effect
@@ -51,9 +51,14 @@ const Home: React.FC = () => {
   // Sync video playback rate with speed
   useEffect(() => {
     if (videoRef.current) {
-      // Clamp playbackRate between 0.0625 and 16
-      const clamped = Math.max(0.0625, Math.min(speed, 16));
-      videoRef.current.playbackRate = clamped;
+      // If paused, set playbackRate to 0 to fully stop the video
+      if (speed === 0) {
+        videoRef.current.playbackRate = 0;
+      } else {
+        // Clamp playbackRate between 0.0625 and 16
+        const clamped = Math.max(0.0625, Math.min(speed, 16));
+        videoRef.current.playbackRate = clamped;
+      }
     }
   }, [speed]);
 
@@ -129,6 +134,7 @@ const Home: React.FC = () => {
       setSunPhase(2);
       if (audioRef2.current) {
         audioRef2.current.currentTime = 0;
+        audioRef2.current.volume = 0.3; // Lower the volume (0.0 - 1.0)
         audioRef2.current.play();
       }
     };
@@ -163,10 +169,6 @@ const Home: React.FC = () => {
     setBgVideo(BG_VIDEOS[bgVideoIndex]);
   }, [bgVideoIndex]);
 
-  // For switching background video on sunPhase change (keep this logic)
-  useEffect(() => {
-    if (sunPhase === 2) setBgVideo("/videos/space2.mp4");
-  }, [sunPhase]);
 
   return (
     <div
@@ -284,7 +286,7 @@ const Home: React.FC = () => {
         style={{
           position: "fixed",
           top: 32,
-          left: 32,
+          left: menuOpen ? MENU_WIDTH + 32 : 32, // Slide with menu
           zIndex: 30,
           background: "rgba(255,255,255,0.05)",
           color: "#fff",
@@ -295,7 +297,7 @@ const Home: React.FC = () => {
           fontFamily: "Orbitron, sans-serif",
           cursor: "pointer",
           boxShadow: "0 2px 8px #0004",
-          transition: "background 0.2s, border-color 0.2s",
+          transition: "left 0.35s cubic-bezier(.77,0,.18,1), background 0.2s, border-color 0.2s",
         }}
       >
         {menuOpen ? "Close Menu" : "Open Menu"}
@@ -313,7 +315,8 @@ const Home: React.FC = () => {
           background: "rgba(20,20,30,0.95)",
           boxShadow: "2px 0 16px #0008",
           zIndex: 25,
-          transform: menuOpen ? "translateX(0)" : `translateX(-${MENU_WIDTH}px)`,
+          // Move menu fully out of view when closed
+          transform: menuOpen ? "translateX(0)" : `translateX(-${MENU_WIDTH + 40}px)`,
           transition: "transform 0.35s cubic-bezier(.77,0,.18,1)",
           display: "flex",
           flexDirection: "column",
