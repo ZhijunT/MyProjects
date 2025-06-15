@@ -1,0 +1,5 @@
+{
+  "rewrites": [
+    { "source": "/note-summary/:path*", "destination": "https://note-summary.vercel.app/:path*" }
+  ]
+}
