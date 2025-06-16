@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from "react";
 
 const planets = [
-  { name: "Mercury", color: "#b1b1b1", r: 70, size: 11, url: "https://zhijuntian.com/note-summary", speed: 1.6, img: "/planets/mercury.png"},
+  { name: "Mercury", color: "#b1b1b1", r: 70, size: 11, url: "https://note-summary.zhijuntian.com/", speed: 1.6, img: "/planets/mercury.png"},
   { name: "Venus", color: "#e6c97b", r: 100, size: 15, url: "https://youtube.com", speed: 1.2, img: "/planets/venus.png" },
   { name: "Earth", color: "#3a6ea5", r: 130, size: 17, url: "https://youtube.com", speed: 1, img: "/planets/earth.png" },
   { name: "Mars", color: "#c1440e", r: 170, size: 14, url: "https://youtube.com", speed: 0.8, img: "/planets/mars.png" },
