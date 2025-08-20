@@ -48,21 +48,17 @@ const Home: React.FC = () => {
   const sunStartRef = useRef<number | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
 
-  // Sync video playback rate with speed
   useEffect(() => {
     if (videoRef.current) {
-      // If paused, set playbackRate to 0 to fully stop the video
       if (speed === 0) {
         videoRef.current.playbackRate = 0;
       } else {
-        // Clamp playbackRate between 0.0625 and 16
         const clamped = Math.max(0.0625, Math.min(speed, 16));
         videoRef.current.playbackRate = clamped;
       }
     }
   }, [speed]);
 
-  // Start timer when sun is clicked
   useEffect(() => {
     if (!sunActive) {
       setSunTimer(0);
@@ -82,7 +78,6 @@ const Home: React.FC = () => {
     return () => cancelAnimationFrame(raf);
   }, [sunActive, pulling]);
 
-  // Animation loop for planets with pull-in effect
   useEffect(() => {
     let animationId: number;
     let lastTime = performance.now();
@@ -94,11 +89,9 @@ const Home: React.FC = () => {
         prev.map((state, i) => {
           const planet = planets[i];
           let r = planet.r;
-          // If pulling, reduce radius over PULL_DURATION seconds
           if (pulling && sunTimer >= PULL_START) {
             const pullElapsed = Math.min(sunTimer - PULL_START, PULL_DURATION);
             const pullProgress = Math.min(pullElapsed / PULL_DURATION, 1);
-            // Ease in for smooth effect (quadratic)
             r = planet.r * (1 - pullProgress * pullProgress);
           }
           const angle = state.angle + planet.speed * delta * 0.5 * speed;
@@ -127,7 +120,6 @@ const Home: React.FC = () => {
     return () => cancelAnimationFrame(raf);
   }, [sunActive, sunPhase]);
 
-  // Listen for sound1 ending, then play sound2 and double speedup
   useEffect(() => {
     if (!sunActive) return;
     const handleEnded = () => {
@@ -147,7 +139,6 @@ const Home: React.FC = () => {
     };
   }, [sunActive]);
 
-  // Sun click handler
   const handleSunClick = () => {
     if (!sunActive) {
       setSunActive(true);
@@ -159,12 +150,10 @@ const Home: React.FC = () => {
     }
   };
 
-  // Button handlers (disable while sunActive)
   const handleSlower = () => !sunActive && setSpeed((s) => Math.max(MIN_SPEED, +(s - SPEED_STEP).toFixed(2)));
   const handlePause = () => !sunActive && setSpeed(0);
   const handleFaster = () => !sunActive && setSpeed((s) => Math.min(MAX_SPEED, +(s + SPEED_STEP).toFixed(2)));
 
-  // Update bgVideo when bgVideoIndex changes
   useEffect(() => {
     setBgVideo(BG_VIDEOS[bgVideoIndex]);
   }, [bgVideoIndex]);
@@ -593,10 +582,10 @@ const Home: React.FC = () => {
           }}
         >
           <h1 style={{ fontWeight: 700, fontSize: 36, margin: 0 }}>
-            Klee and Piemon
+            Welcome to my page
           </h1>
           <p style={{ fontSize: 18, margin: 0 }}>
-            Watch the planets orbit and leave trails. Click a planet to learn more!
+            Check out my other projects by clicking on the planets
           </p>
         </div>
       </div>
