@@ -48,6 +48,15 @@ const Home: React.FC = () => {
   const sunStartRef = useRef<number | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
 
+  const handleDownloadResume = () => {
+    const link = document.createElement("a");
+    link.href = "/resume.pdf";
+    link.download = "resume.pdf";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   useEffect(() => {
     if (videoRef.current) {
       if (speed === 0) {
@@ -290,6 +299,29 @@ const Home: React.FC = () => {
         }}
       >
         {menuOpen ? "Close Menu" : "Open Menu"}
+      </button>
+
+      {/* Resume download button (under the menu toggle) */}
+      <button
+        onClick={handleDownloadResume}
+        style={{
+          position: "fixed",
+          top: 84, // place under the Menu button
+          left: menuOpen ? MENU_WIDTH + 32 : 32,
+          zIndex: 30,
+          background: "rgba(255,255,255,0.05)",
+          color: "#fff",
+          border: "2px solid #fff",
+          borderRadius: 8,
+          padding: "10px 18px",
+          fontSize: 16,
+          fontFamily: "Orbitron, sans-serif",
+          cursor: "pointer",
+          boxShadow: "0 2px 8px #0004",
+          transition: "left 0.35s cubic-bezier(.77,0,.18,1), background 0.2s, border-color 0.2s",
+        }}
+      >
+        Resume
       </button>
 
       {/* Sliding menu */}
