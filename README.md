@@ -6,6 +6,7 @@ Here is the link to home page: https://zhijuntian.com/
 2. https://customer-service.zhijuntian.com/ (AWS AI Workflow)
 3. https://trading.zhijuntian.com/ (Multi Agent)
 4. https://questgpt.zhijuntian.com/ (AI powered D&D game)
+5. https://www.youtube.com/watch?v=MYzByjdt9aM (EVAL)
 
 # The repos are private for these projects, but I am happy to share the code if requested
 

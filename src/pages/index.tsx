@@ -5,7 +5,7 @@ const planets = [
   { name: "Venus", color: "#e6c97b", r: 100, size: 15, url: "https://customer-service.zhijuntian.com/", speed: 1.2, img: "/planets/venus.png" },
   { name: "Earth", color: "#3a6ea5", r: 130, size: 17, url: "https://trading.zhijuntian.com/", speed: 1, img: "/planets/earth.png" },
   { name: "Mars", color: "#c1440e", r: 170, size: 14, url: "https://questgpt.zhijuntian.com/", speed: 0.8, img: "/planets/mars.png" },
-  { name: "Jupiter", color: "#e2b07a", r: 220, size: 40, url: "https://youtube.com", speed: 0.5, img: "/planets/jupiter.png" },
+  { name: "Jupiter", color: "#e2b07a", r: 220, size: 40, url: "https://www.youtube.com/watch?v=MYzByjdt9aM", speed: 0.5, img: "/planets/jupiter.png" },
   { name: "Saturn", color: "#e7d3a1", r: 280, size: 40, url: "https://youtube.com", speed: 0.4, img: "/planets/saturn.png" },
   { name: "Uranus", color: "#b5e3e3", r: 330, size: 23, url: "https://youtube.com", speed: 0.3, img: "/planets/uranus.png" },
   { name: "Neptune", color: "#4062bb", r: 400, size: 27, url: "https://youtube.com", speed: 0.25, img: "/planets/neptune.png" },
